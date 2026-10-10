@@ -1,0 +1,66 @@
+name: Doc42
+description: Install Doc42 and generate engineering documents from a SysML v2 model.
+author: Elan8
+branding:
+  icon: file-text
+  color: blue
+
+inputs:
+  version:
+    description: Doc42 version to install.
+    default: "0.1.0"
+  args:
+    description: >-
+      Arguments for one doc42 run, for example `build model --doc Docs::srs --out out`.
+      Leave empty to only install doc42 and call it from later steps.
+    default: ""
+  working-directory:
+    description: Directory to run doc42 in.
+    default: "."
+
+outputs:
+  executable-path:
+    description: Path of the installed doc42 executable.
+    value: ${{ steps.install.outputs.executable-path }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install Doc42
+      id: install
+      shell: bash
+      env:
+        DOC42_VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+        if [[ "$RUNNER_OS" != "Linux" || "$RUNNER_ARCH" != "X64" ]]; then
+          echo "::error::Doc42 $DOC42_VERSION is published for Linux x64 runners only."
+          exit 1
+        fi
+        if [[ ! "$DOC42_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "::error::Invalid Doc42 version '$DOC42_VERSION'."
+          exit 1
+        fi
+        archive="doc42-$DOC42_VERSION-linux-x64.tar.gz"
+        base="https://github.com/elan8/doc42-action/releases/download/v$DOC42_VERSION"
+        dir="$RUNNER_TEMP/doc42-$DOC42_VERSION"
+        mkdir -p "$dir"
+        curl --fail --silent --show-error --location --retry 3 -o "$dir/$archive" "$base/$archive"
+        curl --fail --silent --show-error --location --retry 3 -o "$dir/SHA256SUMS.txt" "$base/SHA256SUMS.txt"
+        (cd "$dir" && grep " $archive\$" SHA256SUMS.txt | sha256sum --check --strict -)
+        tar -xzf "$dir/$archive" -C "$dir"
+        chmod +x "$dir/doc42"
+        echo "$dir" >> "$GITHUB_PATH"
+        echo "executable-path=$dir/doc42" >> "$GITHUB_OUTPUT"
+        "$dir/doc42" --version
+
+    - name: Run Doc42
+      if: inputs.args != ''
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        DOC42_ARGS: ${{ inputs.args }}
+      run: |
+        set -euo pipefail
+        read -r -a arguments <<< "$DOC42_ARGS"
+        doc42 "${arguments[@]}"
