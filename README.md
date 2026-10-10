@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: elan8/doc42-action@v0.1.0
+      - uses: elan8/doc42-action@v0.1.1
 
       - run: doc42 check model
 
@@ -36,7 +36,7 @@ The action puts `doc42` on the `PATH`. To run a single command in the same step,
 pass it as `args` and set `ELAN8_LICENSE` on that step:
 
 ```yaml
-- uses: elan8/doc42-action@v0.1.0
+- uses: elan8/doc42-action@v0.1.1
   with:
     args: build model --doc ProductDocs::srs --out out
   env:
@@ -45,7 +45,7 @@ pass it as `args` and set `ELAN8_LICENSE` on that step:
 
 | Input | Default | Meaning |
 | --- | --- | --- |
-| `version` | `0.1.0` | Doc42 version to install |
+| `version` | `0.1.1` | Doc42 version to install |
 | `args` | empty | Arguments for one `doc42` run; empty installs only |
 | `working-directory` | `.` | Directory to run `doc42` in |
 
