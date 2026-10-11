@@ -8,7 +8,7 @@ branding:
 inputs:
   version:
     description: Doc42 version to install.
-    default: "0.1.1"
+    default: "0.2.0"
   args:
     description: >-
       Arguments for one doc42 run, for example `build model --doc Docs::srs --out out`.
